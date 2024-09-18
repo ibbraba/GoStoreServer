@@ -6,14 +6,23 @@ const ObjectId = require('mongodb').ObjectId;
 const app = express()
 const port = 3000
 
+//Allow CORS
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
+
+//Decode JSON POST requests
+app.use(bodyParser.json())
 
 //Public endpoints 
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
-app.use(bodyParser.json())
+
 
 
 //Find all products
@@ -53,66 +62,70 @@ app.get("/product/:id", (req, res) => {
         })
 })
 
-
+//Login a user
 app.post("/login", (req, res) => {
 
-    //TODO : Debug method
+
     console.log("POST method received");
-    
+
     console.log(req.body.username);
-    
+
     let username = req.body.username
     let password = req.body.password
 
     connectToMongo("GoStoreDB", "Users")
-    .then(collection => {
-        return collection.findOne({
-            "username" : username,
-            "password" : password
+        .then(collection => {
+            return collection.findOne({
+                "username": username,
+                "password": password
+            })
+
+        }).then((user) => {
+            console.log(user);
+
+            res.json(user)
         })
-        
-    }).then((user) => {
-        console.log(user);
-        
-        res.json(user)
-    })
-    .catch(() => res.json{"message" : "identifiants invalides"})
+        .catch(() => res.json({ "message": "identifiants invalides" }))
 })
+
+//register a user   
+app.post('/register', (req, res) => {
+    console.log("Register request received");
     
-    //register a user   
-    app.post('/register', (req, res) => {
-        let role = "Member"
-        let username = req.body.username
-        let password = req.body.password
-        let name = req.body.name
-        let firstname = req.body.firstname
-        let email = req.body.email
-        let adress = req.body.adress
-        let zipcode = req.body.zipcode
-        let country = req.body.country
-        let gopoints = 0
 
-        //TODO : Validation 
+    let role = "Member"
+    let username = req.body.username
+    let password = req.body.password
+    let name = req.body.name
+    let firstname = req.body.firstname
+    let email = req.body.email
+    let adress = req.body.adress
+    let zipcode = req.body.zipcode
+    let country = req.body.country
+    let gopoints = 0
 
-        connectToMongo("GoStoreDB", "Users")
-            .then(collection => {
-                collection.insertOne({
-                    "username": username,
-                    "name": name,
-                    "firstname": firstname,
-                    "email": email,
-                    "adress": adress,
-                    "zipcode": zipcode,
-                    "country": country,
-                    "gopoints": gopoints
-                })
-            }).then(() => {
-                res.json({ "message": "Utilisateur enregistré" })
-            }).catch((err) => console.log(err));
+    //TODO : Validation 
 
-    })
+    connectToMongo("GoStoreDB", "Users")
+        .then(collection => {
+            collection.insertOne({
+                "username": username,
+                "password" : password,
+                "name": name,
+                "firstname": firstname,
+                "email": email,
+                "adress": adress,
+                "zipcode": zipcode,
+                "country": country,
+                "gopoints": gopoints
+            })
+        }).then(() => {
+            res.json({ "message": "Utilisateur enregistré" })
+        }).catch((err) => console.log(err));
 
-    app.listen(port, () => {
-        console.log(`Example app listening on port ${port}`)
-    })
+})
+
+app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`)
+})
 
