@@ -1,0 +1,29 @@
+[
+    {
+        "username": "jdoe",
+        "name": "Doe",
+        "firstname": "John",
+        "email": "jdoe@example.com",
+        "adress": "123 Main St",
+        "zipcode": "75001",
+        "country": "France"
+    },
+    {
+        "username": "asmith",
+        "name": "Smith",
+        "firstname": "Alice",
+        "email": "asmith@example.com",
+        "adress": "456 Elm St",
+        "zipcode": "75002",
+        "country": "France"
+    },
+    {
+        "username": "mjohnson",
+        "name": "Johnson",
+        "firstname": "Michael",
+        "email": "mjohnson@example.com",
+        "adress": "789 Oak St",
+        "zipcode": "75003",
+        "country": "France"
+    }
+]
