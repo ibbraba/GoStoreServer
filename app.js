@@ -1,6 +1,7 @@
 const express = require('express')
 const { getAllProducts } = require('./Products/ProductController')
-const { connectToMongo } = require('./dbGoStore_utils')
+const { connectToMongo } = require('./dbGoStore_utils');
+const bodyParser = require('body-parser');
 const ObjectId = require('mongodb').ObjectId;
 const app = express()
 const port = 3000
@@ -11,6 +12,8 @@ const port = 3000
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
+
+app.use(bodyParser.json())
 
 
 //Find all products
@@ -54,19 +57,26 @@ app.get("/product/:id", (req, res) => {
 app.post("/login", (req, res) => {
 
     //TODO : Debug method
+    console.log("POST method received");
+    
+    console.log(req.body.username);
+    
     let username = req.body.username
     let password = req.body.password
 
     connectToMongo("GoStoreDB", "Users")
     .then(collection => {
         return collection.findOne({
-            "username": username,
-            "password": password
+            "username" : username,
+            "password" : password
         })
-        .then((user) => {
-            res.json(user)
-        })
-    }).catch((err) => {console.log(err)})
+        
+    }).then((user) => {
+        console.log(user);
+        
+        res.json(user)
+    })
+    .catch(() => res.json{"message" : "identifiants invalides"})
 })
     
     //register a user   
