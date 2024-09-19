@@ -2,6 +2,10 @@ const express = require('express')
 const { getAllProducts } = require('./Products/ProductController')
 const { connectToMongo } = require('./dbGoStore_utils');
 const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+require('dotenv').config();
+const bcryptjs = require('bcrypt');
 const ObjectId = require('mongodb').ObjectId;
 const app = express()
 const port = 3000
@@ -68,34 +72,53 @@ app.post("/login", (req, res) => {
 
     console.log("POST method received");
 
-    console.log(req.body.username);
 
     let username = req.body.username
     let password = req.body.password
+
 
     connectToMongo("GoStoreDB", "Users")
         .then(collection => {
             return collection.findOne({
                 "username": username,
-                "password": password
+              
             })
 
         }).then((user) => {
-            console.log(user);
-
-            res.json(user)
+            if(user && bcryptjs.compare(req.body.password, user.password)){
+                console.log("User connected, creating token and redirecting ...");
+                const token = jwt.sign( { 
+                userId: user._id, username: user.username },
+                process.env.JWT_SECRET,
+                { expiresIn: '2h', 
+                algorithm : "HS256" }
+                );
+           
+                res.send(token);
+            }else{
+                res.status(401).send({
+                    message : "Identifiants invalides"
+                });
+            }
+           
+            
         })
-        .catch(() => res.json({ "message": "identifiants invalides" }))
+        .catch((err) =>{
+            console.log(err)
+            res.json({ "message": "Une erreur est survenue" })
+        })
+        
+            
 })
 
 //register a user   
 app.post('/register', (req, res) => {
     console.log("Register request received");
-    
+
 
     let role = "Member"
     let username = req.body.username
-    let password = req.body.password
+    let password =  bcryptjs.hash(req.body.password, 10); // hashage du mot de passe
     let name = req.body.name
     let firstname = req.body.firstname
     let email = req.body.email
