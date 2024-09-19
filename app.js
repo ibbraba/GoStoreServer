@@ -84,8 +84,19 @@ app.post("/login", (req, res) => {
               
             })
 
-        }).then((user) => {
-            if(user && bcryptjs.compare(req.body.password, user.password)){
+        }).then(async (user) =>  {
+
+           
+            //Invalid username 
+            if(!user){
+                res.status(401).send({
+                    message : "Identifiants invalides"
+                });
+
+                return
+            }
+            
+            if(user && await bcryptjs.compare(req.body.password, user.password)){
                 console.log("User connected, creating token and redirecting ...");
                 const token = jwt.sign( { 
                 userId: user._id, username: user.username },
@@ -105,20 +116,20 @@ app.post("/login", (req, res) => {
         })
         .catch((err) =>{
             console.log(err)
-            res.json({ "message": "Une erreur est survenue" })
+            
         })
         
             
 })
 
 //register a user   
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
     console.log("Register request received");
 
 
     let role = "Member"
     let username = req.body.username
-    let password =  bcryptjs.hash(req.body.password, 10); // hashage du mot de passe
+    let password = await bcryptjs.hash(req.body.password, 10); // hashage du mot de passe
     let name = req.body.name
     let firstname = req.body.firstname
     let email = req.body.email
