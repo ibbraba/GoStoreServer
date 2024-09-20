@@ -13,7 +13,7 @@ const port = 3000
 //Allow CORS
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     next();
 });
 
@@ -66,11 +66,36 @@ app.get("/product/:id", (req, res) => {
         })
 })
 
+//Find a user data
+app.get("/user/:id", (req, res) => {
+    let id = req.params.id
+
+    connectToMongo("GoStoreDB", "Users")
+        .then((collection) => {
+            console.log(collection);
+
+            return collection.findOne({ "_id": new ObjectId(id) })
+                .then(user => {
+                    res.json({
+                        "id" : user._id,
+                        "username" : user.username, 
+                        "name": user.name, 
+                        "email": user.email,
+                        "adress": user.adress,
+                        "zipcode": user.zipcode,
+                        "country": user.country,
+                        "gopoints": user.gopoints
+                    })
+                })
+        })
+        .catch((error) => {
+            console.log(error);
+
+        })
+})
+
 //Login a user
 app.post("/login", (req, res) => {
-
-
-    console.log("POST method received");
 
 
     let username = req.body.username
@@ -86,6 +111,7 @@ app.post("/login", (req, res) => {
 
         }).then(async (user) =>  {
 
+            
            
             //Invalid username 
             if(!user){
@@ -96,8 +122,10 @@ app.post("/login", (req, res) => {
                 return
             }
             
+            //Compare passwords
             if(user && await bcryptjs.compare(req.body.password, user.password)){
-                console.log("User connected, creating token and redirecting ...");
+                
+                //Creating a JWT
                 const token = jwt.sign( { 
                 userId: user._id, username: user.username },
                 process.env.JWT_SECRET,
@@ -105,8 +133,23 @@ app.post("/login", (req, res) => {
                 algorithm : "HS256" }
                 );
            
-                res.send(token);
+                //Sending response
+                res.json({
+                    "message" : "success",
+                    "token" : token,
+                    "user" : {
+                        "id" : user._id,
+                        "username" : user.username, 
+                        "name": user.name, 
+                        "email": user.email,
+                        "adress": user.adress,
+                        "zipcode": user.zipcode,
+                        "country": user.country,
+                        "gopoints": user.gopoints
+                    }
+                });
             }else{
+                //Invalid password
                 res.status(401).send({
                     message : "Identifiants invalides"
                 });
@@ -129,7 +172,8 @@ app.post('/register', async (req, res) => {
 
     let role = "Member"
     let username = req.body.username
-    let password = await bcryptjs.hash(req.body.password, 10); // hashage du mot de passe
+    //Hash password
+    let password = await bcryptjs.hash(req.body.password, 10); 
     let name = req.body.name
     let firstname = req.body.firstname
     let email = req.body.email
@@ -157,6 +201,34 @@ app.post('/register', async (req, res) => {
             res.json({ "message": "Utilisateur enregistré" })
         }).catch((err) => console.log(err));
 
+})
+
+
+app.get("/verify", (req, res) => {
+    
+    const token = req.headers.authorization;
+    
+    //No token
+    if (!token) {
+        console.log("Missing token");
+        res.send("Missing token ")
+        return
+    }
+    
+    //Validate token signature
+    const tokenVerification = jwt.verify(token, process.env.JWT_SECRET, (err, decodedtoken) => {
+        
+        if (err) {
+            console.log(err.message);
+            
+            return err.message
+            
+        } else {
+            return true
+        }
+    })    
+    res.send(tokenVerification)    
+    
 })
 
 app.listen(port, () => {
