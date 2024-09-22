@@ -33,8 +33,6 @@ app.get('/', (req, res) => {
 app.get("/products", (req, res) => {
     connectToMongo("GoStoreDB", "Products")
         .then((collection) => {
-            console.log(collection);
-
             return collection.find({}).toArray()
         }).then(products => {
             res.json(products)
@@ -53,11 +51,11 @@ app.get("/product/:id", (req, res) => {
 
     connectToMongo("GoStoreDB", "Products")
         .then((collection) => {
-            console.log(collection);
+
 
             return collection.findOne({ "_id": new ObjectId(id) })
-                .then(products => {
-                    res.json(products)
+                .then(product => {
+                    res.json(product)
                 })
         })
         .catch((error) => {
@@ -66,20 +64,87 @@ app.get("/product/:id", (req, res) => {
         })
 })
 
+//Gets commands for a given user
+//TODO edit request 
+app.get("/commands/:id", (req, res) => {
+
+    let id = req.params.id
+    connectToMongo("GoStoreDB", "Commands")
+        .then((collection) => {
+            console.log(collection)
+            return collection.find({}).toArray()
+        }).then((commands) => {
+            console.log(commands);
+
+            res.json({ commands })
+        }).catch((err) => {
+            console.log(err);
+
+        })
+})
+
+app.get("/command/:id", (req, res) => {
+    let id = req.params.id
+    connectToMongo("GoStoreDB", "Commands")
+        .then((collection) => {
+            return collection.findOne({ "_id": new ObjectId(id) })
+                .then(products => {
+                    res.json(products)
+                })
+
+        }).catch((err) => console.log(err))
+})
+
+app.get("/command/validate/:id", (req, res) => {
+    let id = req.params.id
+    connectToMongo("GoStoreDB", "Commands")
+        .then((collection) => {
+            collection.updateOne({ "_id": new ObjectId(id) },
+                {
+                    $set: {
+                        "validated": true
+                    }
+                }
+            )
+        }).then(() => {
+            res.send("La commande a bien été validée")
+        }).catch((err) => {
+            console.log(err);
+            
+        })
+})
+
+
+app.post("/create-command", (req, res) => {
+    console.log(req.body);
+
+    const command = req.body
+    connectToMongo("GoStoreDB", "Commands")
+        .then((collection) => {
+            collection.insertOne(command)
+        }).then(() => {
+            res.json({ "message": "Commande enregistrée" })
+        }).catch((err) => {
+            console.log(err);
+
+        })
+
+})
+
+
 //Find a user data
 app.get("/user/:id", (req, res) => {
     let id = req.params.id
 
     connectToMongo("GoStoreDB", "Users")
         .then((collection) => {
-            console.log(collection);
 
             return collection.findOne({ "_id": new ObjectId(id) })
                 .then(user => {
                     res.json({
-                        "id" : user._id,
-                        "username" : user.username, 
-                        "name": user.name, 
+                        "id": user._id,
+                        "username": user.username,
+                        "name": user.name,
                         "email": user.email,
                         "adress": user.adress,
                         "zipcode": user.zipcode,
@@ -94,6 +159,40 @@ app.get("/user/:id", (req, res) => {
         })
 })
 
+app.post("/user/edit/:id", (req, res) => {
+
+    //Collect request informations
+    let id = req.params.id
+    let name = req.body.name
+    let firstname = req.body.firstname
+    let email = req.body.email
+    let adress = req.body.adress
+    let zipcode = req.body.zipcode
+    let country = req.body.country
+
+    connectToMongo("GoStoreDB", "Users")
+        .then(collection => {
+            return collection.updateOne({ "_id": new ObjectId(id) },
+                {
+                    $set: {
+                        "name": name,
+                        "firstname": firstname,
+                        "email": email,
+                        "adress": adress,
+                        "zipcode": zipcode,
+                        "country": country
+                    }
+                }
+            )
+        }).then(() => {
+            res.send("user updated")
+        }).catch((err) => {
+            console.log(err);
+
+        })
+
+})
+
 //Login a user
 app.post("/login", (req, res) => {
 
@@ -106,41 +205,44 @@ app.post("/login", (req, res) => {
         .then(collection => {
             return collection.findOne({
                 "username": username,
-              
+
             })
 
-        }).then(async (user) =>  {
+        }).then(async (user) => {
 
-            
-           
+
+
             //Invalid username 
-            if(!user){
+            if (!user) {
                 res.status(401).send({
-                    message : "Identifiants invalides"
+                    message: "Identifiants invalides"
                 });
 
                 return
             }
-            
+
             //Compare passwords
-            if(user && await bcryptjs.compare(req.body.password, user.password)){
-                
+            if (user && await bcryptjs.compare(req.body.password, user.password)) {
+
                 //Creating a JWT
-                const token = jwt.sign( { 
-                userId: user._id, username: user.username },
-                process.env.JWT_SECRET,
-                { expiresIn: '2h', 
-                algorithm : "HS256" }
+                const token = jwt.sign({
+                    userId: user._id, username: user.username
+                },
+                    process.env.JWT_SECRET,
+                    {
+                        expiresIn: '2h',
+                        algorithm: "HS256"
+                    }
                 );
-           
+
                 //Sending response
                 res.json({
-                    "message" : "success",
-                    "token" : token,
-                    "user" : {
-                        "id" : user._id,
-                        "username" : user.username, 
-                        "name": user.name, 
+                    "message": "success",
+                    "token": token,
+                    "user": {
+                        "id": user._id,
+                        "username": user.username,
+                        "name": user.name,
                         "email": user.email,
                         "adress": user.adress,
                         "zipcode": user.zipcode,
@@ -148,21 +250,21 @@ app.post("/login", (req, res) => {
                         "gopoints": user.gopoints
                     }
                 });
-            }else{
+            } else {
                 //Invalid password
                 res.status(401).send({
-                    message : "Identifiants invalides"
+                    message: "Identifiants invalides"
                 });
             }
-           
-            
+
+
         })
-        .catch((err) =>{
+        .catch((err) => {
             console.log(err)
-            
+
         })
-        
-            
+
+
 })
 
 //register a user   
@@ -173,7 +275,7 @@ app.post('/register', async (req, res) => {
     let role = "Member"
     let username = req.body.username
     //Hash password
-    let password = await bcryptjs.hash(req.body.password, 10); 
+    let password = await bcryptjs.hash(req.body.password, 10);
     let name = req.body.name
     let firstname = req.body.firstname
     let email = req.body.email
@@ -188,7 +290,7 @@ app.post('/register', async (req, res) => {
         .then(collection => {
             collection.insertOne({
                 "username": username,
-                "password" : password,
+                "password": password,
                 "name": name,
                 "firstname": firstname,
                 "email": email,
@@ -203,32 +305,32 @@ app.post('/register', async (req, res) => {
 
 })
 
-
+//Checks a token validity
 app.get("/verify", (req, res) => {
-    
+
     const token = req.headers.authorization;
-    
+
     //No token
     if (!token) {
         console.log("Missing token");
         res.send("Missing token ")
         return
     }
-    
+
     //Validate token signature
     const tokenVerification = jwt.verify(token, process.env.JWT_SECRET, (err, decodedtoken) => {
-        
+
         if (err) {
             console.log(err.message);
-            
+
             return err.message
-            
+
         } else {
             return true
         }
-    })    
-    res.send(tokenVerification)    
-    
+    })
+    res.send(tokenVerification)
+
 })
 
 app.listen(port, () => {
