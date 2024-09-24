@@ -323,7 +323,7 @@ app.get("/verify", (req, res) => {
     //No token
     if (!token) {
         console.log("Missing token");
-        res.sendStatus(401).send("Missing token")
+        res.send("Missing token ")
         return
     }
 
@@ -333,13 +333,13 @@ app.get("/verify", (req, res) => {
         if (err) {
             console.log(err.message);
 
-            res.sendStatus(401).send(err.message)
+            return err.message
 
         } else {
-            res.sendStatus(200).send(true)
+            return true
         }
     })
-
+    res.send(tokenVerification)
 
 })
 
