@@ -30,8 +30,8 @@ describe("It ensure the right behaviour of endpoints", () => {
     
         let invaldToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmViZWYyOWRkNTJjOWI1Nzk4YzQxMWMiLCJ1c2VybmFtZSI6ImJjcnlwdCIsImlhdCI6MTcyNzAzMTQxNywiZXhwIjoxNzI3MDM4NjE3fQ.AOczPbYeHBxBdBHuEYRcXww8qL1a4VKcDuBkQLLunN0"
         const res = await request(app).get('/verify').set('Authorization', `Bearer ${invaldToken}`);
-
-        expect(res.status).toBe(401)
+  
+        expect(res.text).toBe("invalid token")
     })
 
 
