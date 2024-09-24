@@ -1,3 +1,4 @@
+name: Piepeline for tests
 on : push 
 jobs: 
   build-node : 
@@ -5,7 +6,11 @@ jobs:
    container : node:16
    steps:
    - run: node --version 
-   - run: npm --versio  
+   - run: npm --version  
    - uses: actions/checkout@v4
    - run : npm install 
+     name : Install depedencies 
+   - run : npm run test
+     name : run tests
    - run : node app.js
+     name : Run server
