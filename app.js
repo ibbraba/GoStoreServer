@@ -96,6 +96,8 @@ app.get("/command/:id", (req, res) => {
 })
 
 app.get("/command/validate/:id", (req, res) => {
+    console.log("Validation request");
+    
     let id = req.params.id
     connectToMongo("GoStoreDB", "Commands")
         .then((collection) => {
@@ -121,9 +123,10 @@ app.post("/create-command", (req, res) => {
     const command = req.body
     connectToMongo("GoStoreDB", "Commands")
         .then((collection) => {
-            collection.insertOne(command)
-        }).then(() => {
-            res.json({ "message": "Commande enregistrée" })
+           let dbquery =  collection.insertOne(command)
+           return command
+        }).then((cmd) => {
+            res.send(cmd)
         }).catch((err) => {
             console.log(err);
 
@@ -145,6 +148,7 @@ app.get("/user/:id", (req, res) => {
                         "id": user._id,
                         "username": user.username,
                         "name": user.name,
+                        "firstname" : user.firstname,
                         "email": user.email,
                         "adress": user.adress,
                         "zipcode": user.zipcode,
