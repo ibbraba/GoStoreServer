@@ -7,16 +7,11 @@ import { application, request } from "express";
 import { app } from "./app";
 import request from 'supertest';
 
-
+/**
+ * These tests do not require an exchnage with the database
+ */
 describe("It ensure the right behaviour of endpoints", () => {
 
-   
-
-    it("return 200 on get products", async() => {
-        const res = await request(app).get("/products")
-        expect(res.status).toBe(200)
-            
-    })
 
 
     it("Return 404 on not found endpoint", async ()=> {
@@ -28,16 +23,7 @@ describe("It ensure the right behaviour of endpoints", () => {
         
     })
 
-    it("ensures 401 status code if invalid credentials", async() => {
-
-        const res = await request(app).post('/login').send({
-            "username" : "username", 
-            "password" : "invalidValue"
-        })
-
-        expect(res.status).toBe(401)
-
-    })
+ 
 
     it("Ensures verify invalidates a wrong token", async()=> {
 
