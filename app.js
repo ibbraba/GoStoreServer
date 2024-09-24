@@ -7,7 +7,13 @@ const dotenv = require('dotenv');
 require('dotenv').config();
 const bcryptjs = require('bcrypt');
 const ObjectId = require('mongodb').ObjectId;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+
 const app = express()
+exports.app = app
 const port = 3000
 
 //Allow CORS
@@ -317,7 +323,7 @@ app.get("/verify", (req, res) => {
     //No token
     if (!token) {
         console.log("Missing token");
-        res.send("Missing token ")
+        res.sendStatus(401).send("Missing token")
         return
     }
 
@@ -327,13 +333,13 @@ app.get("/verify", (req, res) => {
         if (err) {
             console.log(err.message);
 
-            return err.message
+            res.sendStatus(401).send(err.message)
 
         } else {
-            return true
+            res.sendStatus(200).send(true)
         }
     })
-    res.send(tokenVerification)
+
 
 })
 
